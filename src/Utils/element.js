@@ -1,6 +1,8 @@
 import { TOOL_ITEMS } from "../constants";
 
 import rough from "roughjs";
+import { getArrowHeadsCoordinates } from "./Math";
+
 const gen = rough.generator();
 
 export const CreateRoughElement = (id, x1, y1, x2, y2, { type }) => {
@@ -31,6 +33,19 @@ export const CreateRoughElement = (id, x1, y1, x2, y2, { type }) => {
       element.roughEle = gen.ellipse(cx, cy, witdth, height, { ...optiona });
       return element;
     }
+    case TOOL_ITEMS.ARROW: {
+      const { x3, y3, x4, y4 } = getArrowHeadsCoordinates(x1, y1, x2, y2, 20);
+      const points = [
+        [x1, y1],
+        [x2, y2],
+        [x3, y3],
+        [x2, y2],
+        [x4, y4],
+      ];
+      element.roughEle = gen.linearPath(points, { ...optiona });
+      return element;
+    }
+
     default:
       return element;
   }
