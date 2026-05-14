@@ -1,0 +1,18 @@
+export const TOOL_ITEMS = {
+  BRUSH: "BRUSH",
+  LINE: "LINE",
+  RECTANGLE: "RECTANGLE",
+  CIRCLE: "CIRCLE",
+  ARROW: "ARROW",
+  ERASER: "ERASER",
+  TEXT: "TEXT",
+};
+
+
+export const TOOL_ACTION_TYPES={
+  NONE:"NONE",
+  DRAWING:"DRAWING",
+  
+
+
+}
