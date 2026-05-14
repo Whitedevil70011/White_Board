@@ -27,7 +27,9 @@ function Board() {
 
     /// this is for draw the element on canvas when element change
     element.forEach((ele) => {
-      roughCanvas.draw(ele.roughEle);
+      if (ele.roughEle) {
+        roughCanvas.draw(ele.roughEle);
+      }
     });
 
     /// this is for clear the canvas when element change and redraw the element on canvas
