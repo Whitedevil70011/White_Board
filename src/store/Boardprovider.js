@@ -3,7 +3,7 @@ import React from "react";
 import BoardContext from "./board-context";
 
 import { TOOL_ACTION_TYPES, TOOL_ITEMS } from "../constants";
-
+import { CreateRoughElement } from "../Utils/element";
 import rough from "roughjs";
 const gen = rough.generator();
 
@@ -19,16 +19,15 @@ const boardReducer = (state, action) => {
     }
     case "ADD_ELEMENT": {
       const { clientX, clientY } = action.payload;
+      const newElement = CreateRoughElement(
+        state.element.length + 1,
+        clientX,
+        clientY,
+        clientX,
+        clientY,
+        { type: state.activeToolItem },
+      );
 
-      const newElement = {
-        id: state.element.length + 1,
-        x1: clientX,
-        x2: clientX,
-        y1: clientY,
-        y2: clientY,
-
-        roughEle: gen.line(clientX, clientY, clientX, clientY),
-      };
       return {
         ...state,
         toolActionType: TOOL_ACTION_TYPES.DRAWING,
@@ -42,17 +41,17 @@ const boardReducer = (state, action) => {
       }
       const prevelement = [...state.element];
       const index = prevelement.length - 1;
-      // if (!prevelement[index]) {
-      //   return state;
-      // }
-      prevelement[index].x2 = clientX;
-      prevelement[index].y2 = clientY;
-      prevelement[index].roughEle = gen.line(
+
+      const newElement = CreateRoughElement(
+        index,
         prevelement[index].x1,
         prevelement[index].y1,
         clientX,
         clientY,
+        { type: state.activeToolItem },
       );
+
+      prevelement[index] = newElement;
 
       return {
         ...state,
