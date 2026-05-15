@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useContext } from "react";
 
 import BoardContext from "./board-context";
+import ToolboxContext from "./toolboxcontext";
 
 import { TOOL_ACTION_TYPES, TOOL_ITEMS } from "../constants";
 import { CreateRoughElement } from "../Utils/element";
@@ -18,14 +19,14 @@ const boardReducer = (state, action) => {
       };
     }
     case "ADD_ELEMENT": {
-      const { clientX, clientY } = action.payload;
+      const { clientX, clientY,stroke,fill,size } = action.payload;
       const newElement = CreateRoughElement(
         state.element.length + 1,
         clientX,
         clientY,
         clientX,
         clientY,
-        { type: state.activeToolItem },
+        { type: state.activeToolItem ,stroke:stroke,fill:fill,size:size},
       );
 
       return {
@@ -35,7 +36,7 @@ const boardReducer = (state, action) => {
       };
     }
     case "DRAW_MOVE": {
-      const { clientX, clientY } = action.payload;
+      const { clientX, clientY, stroke, fill, size } = action.payload;
       if (state.element.length === 0) {
         return state;
       }
@@ -48,7 +49,7 @@ const boardReducer = (state, action) => {
         prevelement[index].y1,
         clientX,
         clientY,
-        { type: state.activeToolItem },
+        { type: state.activeToolItem, stroke, fill, size },
       );
 
       prevelement[index] = newElement;
@@ -70,6 +71,7 @@ const boardReducer = (state, action) => {
   }
 };
 
+
 const initialBoardState = {
   activeToolItem: TOOL_ITEMS.RECTANGLE,
   toolActionType: TOOL_ACTION_TYPES.NONE,
@@ -77,6 +79,7 @@ const initialBoardState = {
 };
 
 function Boardprovider({ children }) {
+  const { toolBoxState } = useContext(ToolboxContext);
   const [boardState, dispatch] = React.useReducer(
     boardReducer,
     initialBoardState,
@@ -97,6 +100,9 @@ function Boardprovider({ children }) {
       payload: {
         clientX,
         clientY,
+        stroke: toolBoxState[boardState.activeToolItem]?.stroke || "#000000",
+        fill: toolBoxState[boardState.activeToolItem]?.fill || null,
+        size: toolBoxState[boardState.activeToolItem]?.size || 1,     
       },
     });
   };
@@ -108,6 +114,9 @@ function Boardprovider({ children }) {
       payload: {
         clientX,
         clientY,
+        stroke: toolBoxState[boardState.activeToolItem]?.stroke || "#000000",
+        fill: toolBoxState[boardState.activeToolItem]?.fill || null,
+        size: toolBoxState[boardState.activeToolItem]?.size || 1,
       },
     });
   };

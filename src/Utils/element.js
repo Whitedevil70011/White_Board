@@ -5,17 +5,36 @@ import { getArrowHeadsCoordinates } from "./Math";
 
 const gen = rough.generator();
 
-export const CreateRoughElement = (id, x1, y1, x2, y2, { type }) => {
+export const CreateRoughElement = (id, x1, y1, x2, y2, { type ,stroke,fill,size}) => {
   const element = {
     id,
     x1,
     y1,
     x2,
     y2,
+
   };
   let optiona = {
     seed: id + 1,
+    fillStyle: "solid",
+    roughness: 0,
+    bowing: 0,
   };
+
+  if(stroke){
+    optiona.stroke = stroke;
+
+
+
+  }
+  if(fill){
+    optiona.fill = fill;
+  }
+  if(size){
+
+    optiona.strokeWidth = size;
+  }
+
   switch (type) {
     case TOOL_ITEMS.LINE:
       element.roughEle = gen.line(x1, y1, x2, y2, { ...optiona });
