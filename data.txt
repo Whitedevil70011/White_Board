@@ -25,3 +25,13 @@ useEffect(() => {
 when the mouse lick one melemt first and second quedarant addand when move only 3rd 4th  quard chnage then up drwaing state become none
 
 chnage tool us efor line,reactabhgle or circle 
+
+
+
+
+//// for making  fre epand we store all the path 
+we use fre hand library and we give store path and provid eot into canvas and it create the  object
+
+
+
+/// for erase every nearse [pint we go and  cecek ant element is presnt id presnt remove it ]
