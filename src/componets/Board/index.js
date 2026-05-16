@@ -64,8 +64,6 @@ function Board() {
 
     const roughCanvas = rough.canvas(canvas);
 
-    const generator = rough.generator();
-
     /// this is for draw the element on canvas when element change
     element.forEach((ele) => {
       switch (ele.type) {

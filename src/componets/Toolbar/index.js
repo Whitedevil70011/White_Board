@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import { useContext } from "react";
 import classes from "./index.module.css";
 import cx from "classnames";
 import { LuArrowRight, LuCircle, LuRectangleHorizontal } from "react-icons/lu";
