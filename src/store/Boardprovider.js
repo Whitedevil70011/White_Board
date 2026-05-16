@@ -12,8 +12,6 @@ import {
 
 import { getStroke } from "perfect-freehand";
 
-import rough from "roughjs";
-const gen = rough.generator();
 
 const CHANGE_TOOL = "CHANGE_TOOL";
 
@@ -101,6 +99,7 @@ const boardReducer = (state = initialBoardState, action) => {
         default:
           break;
       }
+      return state;
     }
     case BOARD_ACTIONS.CHANGE_ACTION_TYPE: {
       return {

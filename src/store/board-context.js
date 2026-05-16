@@ -1,4 +1,4 @@
-import { act, createContext } from "react";
+import { createContext } from "react";
 
 const BoardContext = createContext({
   activeTool: "RECTANGLE",
