@@ -1,5 +1,5 @@
 .container {
-  @apply fixed left-1/2 top-3 flex -translate-x-1/2 gap-2.5 rounded-[10px] border border-black/10 bg-white/90 px-2.5 py-2 shadow-[0_6px_18px_rgba(0,0,0,0.12)];
+  @apply fixed left-0 right-0 top-3 mx-auto w-max flex gap-2.5 rounded-[10px] border border-black/10 bg-white/90 px-2.5 py-2 shadow-[0_6px_18px_rgba(0,0,0,0.12)];
 }
 
 .toolItem {

@@ -17,7 +17,15 @@ const gen = rough.generator();
 
 const CHANGE_TOOL = "CHANGE_TOOL";
 
-const boardReducer = (state, action) => {
+const initialBoardState = {
+  activeToolItem: TOOL_ITEMS.RECTANGLE,
+  toolActionType: TOOL_ACTION_TYPES.NONE,
+  element: [],
+  history: [[]],
+  index: 0,
+};
+
+const boardReducer = (state = initialBoardState, action) => {
   switch (action.type) {
     case CHANGE_TOOL: {
       return {
@@ -28,21 +36,21 @@ const boardReducer = (state, action) => {
     case "ADD_ELEMENT": {
       const { clientX, clientY, stroke, fill, size } = action.payload;
       const newElement = CreateRoughElement(
-        state.element.length + 1,
+        state.element.length,
         clientX,
         clientY,
         clientX,
         clientY,
-        { type: state.activeToolItem, stroke: stroke, fill: fill, size: size },
+        { type: state.activeToolItem, stroke, fill, size },
       );
-
+      const prevElements = state.element;
       return {
         ...state,
         toolActionType:
-          state.activeToolItem === TOOL_ITEMS.ERASER
-            ? TOOL_ACTION_TYPES.ERASING
+          state.activeToolItem === TOOL_ITEMS.TEXT
+            ? TOOL_ACTION_TYPES.WRITING
             : TOOL_ACTION_TYPES.DRAWING,
-        element: [...state.element, newElement],
+        element: [...prevElements, newElement],
       };
     }
     case "DRAW_MOVE": {
@@ -94,12 +102,6 @@ const boardReducer = (state, action) => {
           break;
       }
     }
-    case "DRAW_UP": {
-      return {
-        ...state,
-        toolActionType: TOOL_ACTION_TYPES.NONE,
-      };
-    }
     case BOARD_ACTIONS.CHANGE_ACTION_TYPE: {
       return {
         ...state,
@@ -112,21 +114,64 @@ const boardReducer = (state, action) => {
         return !isPointNearElement(clientX, clientY, ele);
       });
 
+      const newHistory = [...state.history.slice(0, state.index + 1), newElement];
+
       return {
         ...state,
         element: newElement,
+        history: newHistory,
+        index: state.index + 1,
+      };
+    }
+    case BOARD_ACTIONS.DRAW_UP: {
+      const element = [...state.element];
+      return {
+        ...state,
+        history: [...state.history.slice(0, state.index + 1), element],
+        index: state.index + 1,
+        toolActionType: TOOL_ACTION_TYPES.NONE,
+      }
+
+
+    }
+    case BOARD_ACTIONS.UNDO: {
+      if (state.index <= 0) return state;
+      return {
+        ...state,
+        element: state.history[state.index - 1],
+        index: state.index - 1,
+      };
+    }
+    case BOARD_ACTIONS.REDO: {
+      if (state.index >= state.history.length - 1) return state;
+      return {
+        ...state,
+        element: state.history[state.index + 1],
+        index: state.index + 1,
+      };
+    }
+
+
+    case BOARD_ACTIONS.CHANGE_TEXT: {
+ 
+      const index = state.element.length - 1;
+      const newElements = [...state.element];
+      newElements[index] = {
+        ...newElements[index],
+        text: action.payload.text,
+      };
+      return {
+        ...state,
+        history: [...state.history.slice(0, state.index + 1), newElements],
+        index: state.index + 1,
+        toolActionType: TOOL_ACTION_TYPES.NONE,
+        element: newElements,
       };
     }
 
     default:
       return state;
   }
-};
-
-const initialBoardState = {
-  activeToolItem: TOOL_ITEMS.RECTANGLE,
-  toolActionType: TOOL_ACTION_TYPES.NONE,
-  element: [],
 };
 
 function Boardprovider({ children }) {
@@ -145,6 +190,26 @@ function Boardprovider({ children }) {
 
   const boardMouseDownHandler = (event) => {
     const { clientX, clientY } = event;
+
+    // if(boardState.activeToolItem === TOOL_ITEMS.TEXT) {
+    //   dispatch({
+    //     type: BOARD_ACTIONS.CHANGE_ACTION_TYPE,
+    //     payload: {
+    //       toolActionType: TOOL_ACTION_TYPES.WRITING_TEXT,
+    //     },
+
+    //   });
+    //     return ;
+
+
+    // }
+
+
+
+
+
+
+
     if (boardState.activeToolItem === TOOL_ITEMS.ERASER) {
       dispatch({
         type: BOARD_ACTIONS.CHANGE_ACTION_TYPE,
@@ -174,6 +239,11 @@ function Boardprovider({ children }) {
   };
 
   const boardMouseMoveHandler = (event) => {
+
+    if(boardState.toolActionType === TOOL_ACTION_TYPES.WRITING) {
+
+
+    }
     const { clientX, clientY } = event;
     if (boardState.toolActionType === TOOL_ACTION_TYPES.DRAWING) {
       dispatch({
@@ -197,9 +267,45 @@ function Boardprovider({ children }) {
     }
   };
   const boardMouseUPHandler = (event) => {
+    if (boardState.toolActionType === TOOL_ACTION_TYPES.WRITING) {
+      return;
+    }
+
+    if (boardState.toolActionType === TOOL_ACTION_TYPES.DRAWING) {
+      dispatch({
+        type: BOARD_ACTIONS.DRAW_UP,
+      });
+      return;
+    }
+
+    if (boardState.toolActionType === TOOL_ACTION_TYPES.ERASING) {
+      dispatch({
+        type: BOARD_ACTIONS.CHANGE_ACTION_TYPE,
+        payload: {
+          toolActionType: TOOL_ACTION_TYPES.NONE,
+        },
+      });
+    }
+  };
+
+  //// 
+  const textAreaBlurHandler = (text) => {
     dispatch({
-      type: "DRAW_UP",
-      payload: {},
+      type: BOARD_ACTIONS.CHANGE_TEXT,
+      payload: { text },
+
+    });
+  };
+  const boardundoHandler = () => {
+    dispatch({
+      type:BOARD_ACTIONS.UNDO,
+
+    })
+
+  }
+  const boardredoHandler = () => {
+    dispatch({
+      type: BOARD_ACTIONS.REDO,
     });
   };
   const boardContextValue = {
@@ -211,6 +317,12 @@ function Boardprovider({ children }) {
     boardMouseDownHandler,
     boardMouseMoveHandler,
     boardMouseUPHandler,
+    textAreaBlurHandler,
+    history: boardState.history,
+    index: boardState.index,
+    undo:boardundoHandler,
+    redo:boardredoHandler,
+
   };
 
   return (
