@@ -35,3 +35,8 @@ we use fre hand library and we give store path and provid eot into canvas and it
 
 
 /// for erase every nearse [pint we go and  cecek ant element is presnt id presnt remove it ]
+
+
+
+ after  undo one stte and draating soe theing then yiu wnat to redo than previous state loose beacuse you push new wlwmwnt 
+ 

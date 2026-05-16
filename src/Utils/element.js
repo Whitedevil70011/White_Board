@@ -86,6 +86,15 @@ export const CreateRoughElement = (
 
       return brushElement;
     }
+    case TOOL_ITEMS.TEXT:
+      {
+        element.text = "";
+        return element;
+        
+
+
+
+      }
 
     default:
       return element;

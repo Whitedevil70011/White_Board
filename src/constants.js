@@ -23,6 +23,9 @@ export const TOOL_ACTION_TYPES={
   NONE:"NONE",
   DRAWING:"DRAWING",
   ERASING:"ERASING",
+  WRITING:"WRITING",
+  
+  
   
 
 

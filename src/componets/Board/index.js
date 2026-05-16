@@ -5,6 +5,7 @@ import BoardContext from "../../store/board-context";
 import { useContext } from "react";
 import { TOOL_ACTION_TYPES, TOOL_ITEMS } from "../../constants";
 
+import classes from "./index.module.css";
 function Board() {
   const {
     element,
@@ -12,14 +13,29 @@ function Board() {
     boardMouseMoveHandler,
     toolActionType,
     boardMouseUPHandler,
+    textAreaBlurHandler,
   } = useContext(BoardContext);
   const canvasRef = useRef(null);
+  const textAreaRef = useRef(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
   }, [element]);
+
+
+
+
+  useEffect(() => {
+    if (toolActionType === TOOL_ACTION_TYPES.WRITING) {
+      setTimeout(() => {
+        textAreaRef.current?.focus();
+      }, 0);
+    }
+  }, [toolActionType]);
+
+
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -41,9 +57,19 @@ function Board() {
           }
           break;
         case TOOL_ITEMS.BRUSH: {
+          /// this code is to draw the brush stroke on canvas when element change
           ctx.save();
           ctx.fillStyle = ele.stroke;
           ctx.fill(ele.path);
+          ctx.restore();
+          break;
+        }
+        case TOOL_ITEMS.TEXT: {
+          ctx.save();
+          ctx.textBaseline = "top";
+          ctx.font = `${ele.size}px Caveat`;
+          ctx.fillStyle = ele.stroke;
+          ctx.fillText(ele.text || "", ele.x1, ele.y1);
           ctx.restore();
           break;
         }
@@ -75,7 +101,28 @@ function Board() {
   };
 
   return (
-    <div>
+    <>
+    {toolActionType === TOOL_ACTION_TYPES.WRITING &&
+      <textarea
+        type="text"
+        className={classes.textElementBox}
+        ref={textAreaRef}
+        style={{
+          top: element[element.length - 1]?.y1,
+          left: element[element.length - 1]?.x1,
+          fontSize: `${element[element.length - 1]?.size}px`,
+          color: element[element.length - 1]?.stroke,
+        }}
+        onBlur={(event) => textAreaBlurHandler(event.target.value)}
+      />
+    }
+   
+
+
+  
+  
+
+       
       <canvas
         width={window.innerWidth}
         height={600}
@@ -85,7 +132,11 @@ function Board() {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
       />
-    </div>
+
+
+
+    </>
+
   );
 }
 
