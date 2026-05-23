@@ -1,5 +1,5 @@
 const Canvas = require("../models/canvasModel");
-const User = require("../Models/userModel");
+const User = require("../models/userModel");
 const mongoose = require("mongoose");
 
 // Create a new canvas

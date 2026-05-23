@@ -1,49 +1,15 @@
 const mongoose = require("mongoose");
 const User = require("./userModel");
 
-const CanvasSchema = new mongoose.Schema(
-  {
-    owner: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
-    elements: {
-      type: [mongoose.Schema.Types.Mixed],
-      default: [],
-    },
-
-    shared_with: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
-
-    is_public: {
-      type: Boolean,
-      default: false,
-    },
-
-    last_modified_by: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
-  },
-  {
-    timestamps: true,
-  },
-);
+const canvasSchema = new mongoose.Schema({
+    owner: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    shared: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    elements: [{ type: mongoose.Schema.Types.Mixed }],
+    createdAt: { type: Date, default: Date.now }
+});
 
 // Get all canvases for a user
-CanvasSchema.statics.getAllCanvases = async function (email) {
+canvasSchema.statics.getAllCanvases = async function (email) {
   const user = await User.findOne({ email });
 
   if (!user) {
@@ -59,7 +25,7 @@ CanvasSchema.statics.getAllCanvases = async function (email) {
 
 /// create a canvas for a user with given email and canvas name
 
-CanvasSchema.statics.createCanvas = async function (email, name) {
+canvasSchema.statics.createCanvas = async function (email, name) {
   try {
     const user = await User.findOne({ email });
 
@@ -86,7 +52,7 @@ CanvasSchema.statics.createCanvas = async function (email, name) {
 
 //// update a canvas
 
-CanvasSchema.statics.updateCanvas = async function (email, id, elements) {
+canvasSchema.statics.updateCanvas = async function (email, id, elements) {
   try {
 
 
@@ -133,7 +99,7 @@ CanvasSchema.statics.updateCanvas = async function (email, id, elements) {
 
 // Load a canvas by ID for a user
 
-CanvasSchema.statics.loadCanvas = async function (email, canvasId) {
+canvasSchema.statics.loadCanvas = async function (email, canvasId) {
   try {
     const user = await User.findOne({ email });
 
@@ -162,7 +128,7 @@ CanvasSchema.statics.loadCanvas = async function (email, canvasId) {
 
 
 // Add email to shared_with array of canvas
-CanvasSchema.statics.shareCanvas = async function (email, canvasId, sharedWithEmail) {
+canvasSchema.statics.shareCanvas = async function (email, canvasId, sharedWithEmail) {
   try {
     const user = await User.findOne({ email });
 
@@ -206,6 +172,6 @@ CanvasSchema.statics.shareCanvas = async function (email, canvasId, sharedWithEm
 
 
 
-const Canvas = mongoose.model("Canvas", CanvasSchema, "Canvases");
+const Canvas = mongoose.model("Canvas", canvasSchema, "Canvases");
 
 module.exports = Canvas;
