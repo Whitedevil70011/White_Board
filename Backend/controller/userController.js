@@ -6,8 +6,8 @@ const JWT_SECRET = "your_jwt_secret";
 
 
 const registerUser = async (req, res) => {
-  const { username, email, password } = req.body;
-  const user = await userModel.registerUser(username, email, password);
+  const { name, email, password } = req.body;
+  const user = await userModel.registerUser(name, email, password);
   if (user) {
     res.status(201).json(user);
   } else {

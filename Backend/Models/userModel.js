@@ -33,8 +33,14 @@ userSchema.statics.registerUser = async function(name, email, password) {
         throw new Error("Invalid email address");
     }
 
-    if (!validator.isStrongPassword(password)) {
-        throw new Error("Password is not strong enough");
+    if (!validator.isStrongPassword(password, {
+        minLength: 6,
+        minLowercase: 0,
+        minUppercase: 0,
+        minNumbers: 1,
+        minSymbols: 0
+    })) {
+        throw new Error("Password must be at least 6 characters with at least 1 number");
     }
 
     // check user already exists

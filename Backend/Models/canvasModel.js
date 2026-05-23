@@ -90,7 +90,7 @@ CanvasSchema.statics.updateCanvas = async function (email, id, elements) {
   try {
 
 
-    const user = await mongoose.model("Users").findOne({ email });
+    const user = await User.findOne({ email });
 
     if (!user) {
       return Error("User not found");
@@ -140,21 +140,71 @@ CanvasSchema.statics.loadCanvas = async function (email, canvasId) {
     if (!user) {
       throw new Error("User not found");
     }
+    
     const canvas = await this.findOne({
-      _id: canvasId,
-
-      $or: [{ owner: user._id }, { shared_with: user._id }],
+      $and: [
+        { _id: canvasId },
+        { $or: [{ owner: user._id }, { shared_with: user._id }] }
+      ],
     });
 
     if (!canvas) {
       throw new Error("Canvas not found or access denied");
     }
 
+    console.log("Loaded canvas:", canvas);
     return canvas;
   } catch (error) {
     throw new Error(error.message);
   }
 };
+
+
+
+// Add email to shared_with array of canvas
+CanvasSchema.statics.shareCanvas = async function (email, canvasId, sharedWithEmail) {
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      throw Error("User not found");
+    }
+
+    const canvas = await this.findOne({ _id: canvasId, owner: user._id });
+
+    if (!canvas) {
+      throw Error("Canvas not found");
+    }
+
+    const sharedWithUser = await User.findOne({ email: sharedWithEmail });
+
+    if (!sharedWithUser) {
+      throw Error("User to share with not found");
+    }
+
+    canvas.shared_with.push(sharedWithUser._id);
+    const updatedCanvas = await canvas.save();
+
+    return updatedCanvas;
+  } catch (error) {
+    throw Error(error.message || "Error sharing canvas");
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 const Canvas = mongoose.model("Canvas", CanvasSchema, "Canvases");
 
