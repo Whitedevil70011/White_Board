@@ -1,0 +1,71 @@
+[33mcommit 16f978db0ccbdcb834c6b05ed9f8e66470affa23[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m
+Author: Chandrakanta <chandrakanta70011@gmail.com>
+Date:   Sun May 17 00:00:06 2026 +0530
+
+    Fix ESLint build errors
+
+[33mcommit 1fefce57f48bab105c4015bf80f0a21df31e1171[m
+Author: Chandrakanta <chandrakanta70011@gmail.com>
+Date:   Sat May 16 23:52:58 2026 +0530
+
+    Update README and fix lint warnings
+
+[33mcommit 8d536a1ed8ab7bcf5cd06cac923897dd35ed01c8[m
+Author: Chandrakanta <chandrakanta70011@gmail.com>
+Date:   Sat May 16 23:40:44 2026 +0530
+
+    Add undo/redo key shortcuts
+
+[33mcommit 8de9ea0ae3637a00063ed737c4f7efaed518c662[m
+Author: Chandrakanta <chandrakanta70011@gmail.com>
+Date:   Sat May 16 20:38:50 2026 +0530
+
+    Download and color picker are ready
+
+[33mcommit a42ceeae6be9d25ecf31b9bbd3d6eb77ce8cbd7d[m
+Author: Chandrakanta <chandrakanta70011@gmail.com>
+Date:   Sat May 16 19:30:27 2026 +0530
+
+    Finish text tool and undo/redo
+
+[33mcommit f82f1d0bd37e7295e519047a7fa79ea6af96045d[m
+Author: Chandrakanta <chandrakanta70011@gmail.com>
+Date:   Fri May 15 18:40:26 2026 +0530
+
+    feat: erase box ready
+
+[33mcommit 32d973d1bd779ee268f9626963c483d675a5a596[m
+Author: Chandrakanta <chandrakanta70011@gmail.com>
+Date:   Fri May 15 16:25:37 2026 +0530
+
+    tool box context is ready
+
+[33mcommit ac8763360b12b8b884c4fdd9fda98ef67a4e4bae[m
+Author: Chandrakanta <chandrakanta70011@gmail.com>
+Date:   Thu May 14 21:11:16 2026 +0530
+
+    arrow also done
+
+[33mcommit c671f99a6d848afd25d75caf074c42ced50f058e[m
+Author: Chandrakanta <chandrakanta70011@gmail.com>
+Date:   Thu May 14 20:59:48 2026 +0530
+
+    circle complete
+
+[33mcommit b2c392873c0f230630d9b7eca5d8ee6664b46200[m
+Author: Chandrakanta <chandrakanta70011@gmail.com>
+Date:   Thu May 14 20:28:01 2026 +0530
+
+    rectangle complete
+
+[33mcommit 0f0bc696228bc7b19195069ae3e1b1c37719b0e6[m
+Author: Chandrakanta <chandrakanta70011@gmail.com>
+Date:   Thu May 14 19:47:27 2026 +0530
+
+    line making code ready
+
+[33mcommit 9edcd38d067cfbc022fb75d09208c9cb79b09323[m
+Author: Chandrakanta <chandrakanta70011@gmail.com>
+Date:   Thu May 14 19:45:45 2026 +0530
+
+    first commit
