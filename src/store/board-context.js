@@ -1,18 +1,22 @@
 import { createContext } from "react";
 
-const BoardContext = createContext({
-  activeTool: "RECTANGLE",
-  toolActionType: "NONE",
-  element: [],
-  history:[[]],
+const boardContext = createContext({
+  isUserLoggedIn: false,
+  activeToolItem: "",
+  toolActionType: "",
+  elements: [],
+  history: [[]],
   index: 0,
-
+  canvasId: "", 
+  setElements: () => {},
   boardMouseDownHandler: () => {},
-  boardMouseMoveHandler: () => {},
+  setCanvasId: () => {},
   changeToolHandler: () => {},
-  boardMouseUPHandler: () => {},
-  textAreaBlurHandler: () => {},
-
+  boardMouseMoveHandler: () => {},
+  boardMouseUpHandler: () => {},
+  setUserLoginStatus: () => {},
+  setHistory: () => {}
 });
 
-export default BoardContext;
+
+export default boardContext;

@@ -1,6 +1,5 @@
 .textElementBox {
   position: fixed;
-  z-index: 1;
   border: none;
   background: transparent;
   resize: none;
@@ -9,8 +8,6 @@
   margin: 0;
   width: auto;
   height: auto;
-  min-width: 1px;
-  min-height: 1em;
   overflow: hidden;
   font-size: inherit;
   font-family: inherit;

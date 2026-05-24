@@ -1,33 +1,30 @@
-import React from "react";
-import classes from "./index.module.css";
+import React, { useContext } from "react";
+
 import cx from "classnames";
+
+import classes from "./index.module.css";
 import {
   COLORS,
   FILL_TOOL_TYPES,
-  STROKE_TOOL_TYPES,
   SIZE_TOOL_TYPES,
+  STROKE_TOOL_TYPES,
   TOOL_ITEMS,
 } from "../../constants";
-import { useContext } from "react";
-import ToolboxContext from "../../store/toolboxcontext";
-import BoardContext from "../../store/board-context";
+import toolboxContext from "../../store/toolbox-context";
+import boardContext from "../../store/board-context";
 
-function ToolBox() {
-  const { activeTool } = useContext(BoardContext);
-  const activeToolItem = activeTool;
+const Toolbox = () => {
+  const { activeToolItem } = useContext(boardContext);
+  const { toolboxState, changeStroke, changeFill, changeSize } =
+    useContext(toolboxContext);
 
-  const { toolBoxState, changeStrokeHandler, changeFillHandler, changesizeHandler } =
-    useContext(ToolboxContext);
-  const changeFill = changeFillHandler;
-  const strokeColor = toolBoxState[activeTool]?.stroke || "#000000";
-  const fillColor = toolBoxState[activeTool]?.fill || null;
-const size = toolBoxState[activeTool]?.size || 1;
-
+  const strokeColor = toolboxState[activeToolItem]?.stroke;
+  const fillColor = toolboxState[activeToolItem]?.fill;
+  const size = toolboxState[activeToolItem]?.size;
 
   return (
     <div className={classes.container}>
-    
-    {STROKE_TOOL_TYPES.includes(activeTool) && (
+      {STROKE_TOOL_TYPES.includes(activeToolItem) && (
         <div className={classes.selectOptionContainer}>
           <div className={classes.toolBoxLabel}>Stroke Color</div>
           <div className={classes.colorsContainer}>
@@ -36,7 +33,7 @@ const size = toolBoxState[activeTool]?.size || 1;
                 className={classes.colorPicker}
                 type="color"
                 value={strokeColor}
-                onChange={(e) => changeStrokeHandler(activeTool, e.target.value)}
+                onChange={(e) => changeStroke(activeToolItem, e.target.value)}
               ></input>
             </div>
             {Object.keys(COLORS).map((k) => {
@@ -47,7 +44,7 @@ const size = toolBoxState[activeTool]?.size || 1;
                     [classes.activeColorBox]: strokeColor === COLORS[k],
                   })}
                   style={{ backgroundColor: COLORS[k] }}
-                  onClick={() => changeStrokeHandler(activeTool, COLORS[k])}
+                  onClick={() => changeStroke(activeToolItem, COLORS[k])}
                 ></div>
               );
             })}
@@ -68,7 +65,7 @@ const size = toolBoxState[activeTool]?.size || 1;
                 <input
                   className={classes.colorPicker}
                   type="color"
-                  value={fillColor}
+                  value={strokeColor}
                   onChange={(e) => changeFill(activeToolItem, e.target.value)}
                 ></input>
               </div>
@@ -94,29 +91,23 @@ const size = toolBoxState[activeTool]?.size || 1;
           </div>
         </div>
       )}
-
-
-
-
-      {SIZE_TOOL_TYPES.includes(activeTool) && (
+      {SIZE_TOOL_TYPES.includes(activeToolItem) && (
         <div className={classes.selectOptionContainer}>
           <div className={classes.toolBoxLabel}>
-            {activeTool === TOOL_ITEMS.TEXT ? "Font Size" : "Brush Size"}
+            {activeToolItem === TOOL_ITEMS.TEXT ? "Font Size" : "Brush Size"}
           </div>
-
           <input
             type="range"
-            min={activeTool === TOOL_ITEMS.TEXT ? 12 : 1}
-            max={activeTool === TOOL_ITEMS.TEXT ? 64 : 10}
+            min={activeToolItem === TOOL_ITEMS.TEXT ? 12 : 1}
+            max={activeToolItem === TOOL_ITEMS.TEXT ? 64 : 10}
             step={1}
             value={size}
-            onChange={(e) => changesizeHandler(activeTool, e.target.value)}
-          />
+            onChange={(event) => changeSize(activeToolItem, event.target.value)}
+          ></input>
         </div>
       )}
-
     </div>
   );
-}
+};
 
-export default ToolBox;
+export default Toolbox;

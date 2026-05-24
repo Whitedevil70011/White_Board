@@ -1,262 +1,277 @@
-import React, { useContext } from "react";
-
-import BoardContext from "./board-context";
-import ToolboxContext from "./toolboxcontext";
-
+import React, { useCallback, useReducer, useEffect } from "react";
+import boardContext from "./board-context";
 import { BOARD_ACTIONS, TOOL_ACTION_TYPES, TOOL_ITEMS } from "../constants";
 import {
-  CreateRoughElement,
-  getSvgPathFromStroke,
+  createElement,
   isPointNearElement,
-} from "../Utils/element";
+} from "../utils/element";
+import { updateCanvas, fetchInitialCanvasElements } from "../utils/api";
 
-import { getStroke } from "perfect-freehand";
+const canvasId = "67a66a7c2475972d34655e4d";
 
-
-const CHANGE_TOOL = "CHANGE_TOOL";
-
-const initialBoardState = {
-  activeToolItem: TOOL_ITEMS.RECTANGLE,
-  toolActionType: TOOL_ACTION_TYPES.NONE,
-  element: [],
-  history: [[]],
-  index: 0,
-};
-
-const boardReducer = (state = initialBoardState, action) => {
+const boardReducer = (state, action) => {
   switch (action.type) {
-    case CHANGE_TOOL: {
+    case BOARD_ACTIONS.CHANGE_TOOL: {
       return {
         ...state,
         activeToolItem: action.payload.tool,
       };
     }
-    case "ADD_ELEMENT": {
+    case BOARD_ACTIONS.CHANGE_ACTION_TYPE:
+      return {
+        ...state,
+        toolActionType: action.payload.actionType,
+      };
+    case BOARD_ACTIONS.DRAW_DOWN: {
       const { clientX, clientY, stroke, fill, size } = action.payload;
-      const newElement = CreateRoughElement(
-        state.element.length,
+      const newElement = createElement(
+        state.elements.length,
         clientX,
         clientY,
         clientX,
         clientY,
-        { type: state.activeToolItem, stroke, fill, size },
+        { type: state.activeToolItem, stroke, fill, size }
       );
-      const prevElements = state.element;
+      const prevElements = state.elements;
       return {
         ...state,
         toolActionType:
           state.activeToolItem === TOOL_ITEMS.TEXT
             ? TOOL_ACTION_TYPES.WRITING
             : TOOL_ACTION_TYPES.DRAWING,
-        element: [...prevElements, newElement],
+        elements: [...prevElements, newElement],
       };
     }
-    case "DRAW_MOVE": {
-      const { clientX, clientY, stroke, fill, size } = action.payload;
-      if (state.element.length === 0) {
-        return state;
-      }
-      const prevelement = [...state.element];
-      const index = prevelement.length - 1;
-
-      const type = state.activeToolItem;
+    case BOARD_ACTIONS.DRAW_MOVE: {
+      const { clientX, clientY } = action.payload;
+      const newElements = [...state.elements];
+      const index = state.elements.length - 1;
+      const { type } = newElements[index];
       switch (type) {
         case TOOL_ITEMS.LINE:
-        case TOOL_ITEMS.ARROW:
         case TOOL_ITEMS.RECTANGLE:
         case TOOL_ITEMS.CIRCLE:
-          const newElement = CreateRoughElement(
-            index,
-            prevelement[index].x1,
-            prevelement[index].y1,
-            clientX,
-            clientY,
-            { type: state.activeToolItem, stroke, fill, size },
-          );
-
-          prevelement[index] = newElement;
-
+        case TOOL_ITEMS.ARROW:
+          const { x1, y1, stroke, fill, size } = newElements[index];
+          const newElement = createElement(index, x1, y1, clientX, clientY, {
+            type: state.activeToolItem,
+            stroke,
+            fill,
+            size,
+          });
+          newElements[index] = newElement;
           return {
             ...state,
-            toolActionType: TOOL_ACTION_TYPES.DRAWING,
-            element: prevelement,
+            elements: newElements,
           };
-
-        case TOOL_ITEMS.BRUSH: {
-          prevelement[index].points = [
-            ...prevelement[index].points,
-            [clientX, clientY],
+        case TOOL_ITEMS.BRUSH:
+          newElements[index].points = [
+            ...newElements[index].points,
+            { x: clientX, y: clientY },
           ];
-          prevelement[index].path = new Path2D(
-            getSvgPathFromStroke(getStroke(prevelement[index].points)),
-          );
-
+          // newElements[index].path = new Path2D(
+          //   getSvgPathFromStroke(getStroke(newElements[index].points))
+          // );
           return {
             ...state,
-            element: prevelement,
+            elements: newElements,
           };
-        }
         default:
-          break;
+          throw new Error("Type not recognized");
       }
-      return state;
     }
-    case BOARD_ACTIONS.CHANGE_ACTION_TYPE: {
-      return {
-        ...state,
-        toolActionType: action.payload.toolActionType,
-      };
-    }
-    case BOARD_ACTIONS.ERASE: {
-      const { clientX, clientY } = action.payload;
-      const newElement = state.element.filter((ele) => {
-        return !isPointNearElement(clientX, clientY, ele);
-      });
-
-      const newHistory = [...state.history.slice(0, state.index + 1), newElement];
+    case BOARD_ACTIONS.DRAW_UP: {
+      const elementsCopy = [...state.elements];
+      const newHistory = state.history.slice(0, state.index + 1);
+      newHistory.push(elementsCopy);
+      // updateCanvas(state.canvasId, elementsCopy);
+      // if (state.isUserLoggedIn) {
+      //   updateCanvas(state.canvasId, elementsCopy);
+      // }
 
       return {
         ...state,
-        element: newElement,
         history: newHistory,
         index: state.index + 1,
       };
     }
-    case BOARD_ACTIONS.DRAW_UP: {
-      const element = [...state.element];
+    case BOARD_ACTIONS.ERASE: {
+      const { clientX, clientY } = action.payload;
+      let newElements = [...state.elements];
+      newElements = newElements.filter((element) => {
+        return !isPointNearElement(element, clientX, clientY);
+      });
+      const newHistory = state.history.slice(0, state.index + 1);
+      newHistory.push(newElements);
+      // updateCanvas(state.canvasId, newElements);
+      // if (state.isUserLoggedIn) {
+      //   updateCanvas(state.canvasId, newElements);
+      // }
       return {
         ...state,
-        history: [...state.history.slice(0, state.index + 1), element],
+        elements: newElements,
+        history: newHistory,
         index: state.index + 1,
+      };
+    }
+    case BOARD_ACTIONS.CHANGE_TEXT: {
+      const index = state.elements.length - 1;
+      const newElements = [...state.elements];
+      newElements[index].text = action.payload.text;
+      const newHistory = state.history.slice(0, state.index + 1);
+      newHistory.push(newElements);
+      // updateCanvas(state.canvasId, newElements);
+      // if (state.isUserLoggedIn) {
+      //   updateCanvas(state.canvasId, newElements);
+      // }
+      return {
+        ...state,
         toolActionType: TOOL_ACTION_TYPES.NONE,
-      }
-
-
+        elements: newElements,
+        history: newHistory,
+        index: state.index + 1,
+      };
     }
     case BOARD_ACTIONS.UNDO: {
       if (state.index <= 0) return state;
+      console.log("undo testing ",state.history)
+      // updateCanvas(state.canvasId, state.history[state.index - 1]);
+      // if (state.isUserLoggedIn) {
+      //   updateCanvas(state.canvasId, state.history[state.index - 1]);
+      // }
       return {
         ...state,
-        element: state.history[state.index - 1],
+        elements: state.history[state.index - 1],
         index: state.index - 1,
       };
     }
     case BOARD_ACTIONS.REDO: {
       if (state.index >= state.history.length - 1) return state;
+      // updateCanvas(state.canvasId, state.history[state.index + 1]);
+      // if (state.isUserLoggedIn) {
+      //   updateCanvas(state.canvasId, state.history[state.index + 1]);
+      // }
       return {
         ...state,
-        element: state.history[state.index + 1],
+        elements: state.history[state.index + 1],
         index: state.index + 1,
       };
     }
-
-
-    case BOARD_ACTIONS.CHANGE_TEXT: {
- 
-      const index = state.element.length - 1;
-      const newElements = [...state.element];
-      newElements[index] = {
-        ...newElements[index],
-        text: action.payload.text,
-      };
+    case BOARD_ACTIONS.SET_INITIAL_ELEMENTS: {
       return {
         ...state,
-        history: [...state.history.slice(0, state.index + 1), newElements],
-        index: state.index + 1,
-        toolActionType: TOOL_ACTION_TYPES.NONE,
-        element: newElements,
+        elements: action.payload.elements,
+        history: [action.payload.elements], 
       };
     }
+    case BOARD_ACTIONS.SET_CANVAS_ID:
+      return {
+        ...state,
+        canvasId: action.payload.canvasId,
+      };
+    case BOARD_ACTIONS.SET_CANVAS_ELEMENTS:
+      return {
+        ...state,
+        elements: action.payload.elements,
+      };
 
-    default:
+    case BOARD_ACTIONS.SET_HISTORY:
+      return {
+        ...state,
+        history: [action.payload.elements],
+      };
+
+    case BOARD_ACTIONS.SET_USER_LOGIN_STATUS:
+      return {
+        ...state,
+        isUserLoggedIn: action.payload.isUserLoggedIn,
+      };
+        default:
       return state;
   }
 };
 
-function Boardprovider({ children }) {
-  const { toolBoxState } = useContext(ToolboxContext);
-  const [boardState, dispatch] = React.useReducer(
+const isUserLoggedIn = !!localStorage.getItem("whiteboard_user_token");
+
+const initialBoardState = {
+  activeToolItem: TOOL_ITEMS.BRUSH,
+  toolActionType: TOOL_ACTION_TYPES.NONE,
+  elements: [],
+  history: [[]],
+  index: 0,
+  canvasId: "",
+  isUserLoggedIn: isUserLoggedIn,
+};
+
+
+const BoardProvider = ({ children }) => {
+  const [boardState, dispatchBoardAction] = useReducer(
     boardReducer,
-    initialBoardState,
+    initialBoardState
   );
 
-  // const [activeTool, setActiveTool] = React.useState(TOOL_ITEMS.RECTANGLE);
-  // const [element, setElement] = React.useState([]);
+  // Fetch elements from the database on component mount
+  // useEffect(() => {
+  //   // Move the API call to utils/api.js
+  //   fetchInitialCanvasElements(boardState.canvasId)
+  //     .then((elements) => {
+  //       dispatchBoardAction({
+  //         type: BOARD_ACTIONS.SET_INITIAL_ELEMENTS,
+  //         payload: { elements },
+  //       });
+  //     })
+  //     .catch((error) => {
+  //       console.error("Error fetching initial canvas elements:", error);
+  //       // Optionally handle the error, e.g., set a default state or display an error message
+  //     });
+  // }, []); // Empty dependency array ensures this runs only once on mount
 
-  const handleTooLItemClick = (tool) => {
-    dispatch({ type: CHANGE_TOOL, payload: { tool } });
+  const changeToolHandler = (tool) => {
+    dispatchBoardAction({
+      type: BOARD_ACTIONS.CHANGE_TOOL,
+      payload: {
+        tool,
+      },
+    });
   };
 
-  const boardMouseDownHandler = (event) => {
+  const boardMouseDownHandler = (event, toolboxState) => {
+    if (boardState.toolActionType === TOOL_ACTION_TYPES.WRITING) return;
     const { clientX, clientY } = event;
-
-    // if(boardState.activeToolItem === TOOL_ITEMS.TEXT) {
-    //   dispatch({
-    //     type: BOARD_ACTIONS.CHANGE_ACTION_TYPE,
-    //     payload: {
-    //       toolActionType: TOOL_ACTION_TYPES.WRITING_TEXT,
-    //     },
-
-    //   });
-    //     return ;
-
-
-    // }
-
-
-
-
-
-
-
     if (boardState.activeToolItem === TOOL_ITEMS.ERASER) {
-      dispatch({
+      dispatchBoardAction({
         type: BOARD_ACTIONS.CHANGE_ACTION_TYPE,
         payload: {
-          toolActionType: TOOL_ACTION_TYPES.ERASING,
-        },
-      });
-      dispatch({
-        type: BOARD_ACTIONS.ERASE,
-        payload: {
-          clientX,
-          clientY,
+          actionType: TOOL_ACTION_TYPES.ERASING,
         },
       });
       return;
     }
-    dispatch({
-      type: "ADD_ELEMENT",
+    dispatchBoardAction({
+      type: BOARD_ACTIONS.DRAW_DOWN,
       payload: {
         clientX,
         clientY,
-        stroke: toolBoxState[boardState.activeToolItem]?.stroke || "#000000",
-        fill: toolBoxState[boardState.activeToolItem]?.fill || null,
-        size: toolBoxState[boardState.activeToolItem]?.size || 1,
+        stroke: toolboxState[boardState.activeToolItem]?.stroke,
+        fill: toolboxState[boardState.activeToolItem]?.fill,
+        size: toolboxState[boardState.activeToolItem]?.size,
       },
     });
   };
 
   const boardMouseMoveHandler = (event) => {
-
-    if(boardState.toolActionType === TOOL_ACTION_TYPES.WRITING) {
-
-
-    }
+    if (boardState.toolActionType === TOOL_ACTION_TYPES.WRITING) return;
     const { clientX, clientY } = event;
     if (boardState.toolActionType === TOOL_ACTION_TYPES.DRAWING) {
-      dispatch({
-        type: "DRAW_MOVE",
+      dispatchBoardAction({
+        type: BOARD_ACTIONS.DRAW_MOVE,
         payload: {
           clientX,
           clientY,
-          stroke: toolBoxState[boardState.activeToolItem]?.stroke || "#000000",
-          fill: toolBoxState[boardState.activeToolItem]?.fill || null,
-          size: toolBoxState[boardState.activeToolItem]?.size || 1,
         },
       });
     } else if (boardState.toolActionType === TOOL_ACTION_TYPES.ERASING) {
-      dispatch({
+      dispatchBoardAction({
         type: BOARD_ACTIONS.ERASE,
         payload: {
           clientX,
@@ -265,70 +280,103 @@ function Boardprovider({ children }) {
       });
     }
   };
-  const boardMouseUPHandler = (event) => {
-    if (boardState.toolActionType === TOOL_ACTION_TYPES.WRITING) {
-      return;
-    }
 
+  const boardMouseUpHandler = () => {
+    if (boardState.toolActionType === TOOL_ACTION_TYPES.WRITING) return;
     if (boardState.toolActionType === TOOL_ACTION_TYPES.DRAWING) {
-      dispatch({
+      dispatchBoardAction({
         type: BOARD_ACTIONS.DRAW_UP,
       });
-      return;
     }
-
-    if (boardState.toolActionType === TOOL_ACTION_TYPES.ERASING) {
-      dispatch({
-        type: BOARD_ACTIONS.CHANGE_ACTION_TYPE,
-        payload: {
-          toolActionType: TOOL_ACTION_TYPES.NONE,
-        },
-      });
-    }
-  };
-
-  //// 
-  const textAreaBlurHandler = (text) => {
-    dispatch({
-      type: BOARD_ACTIONS.CHANGE_TEXT,
-      payload: { text },
-
+    dispatchBoardAction({
+      type: BOARD_ACTIONS.CHANGE_ACTION_TYPE,
+      payload: {
+        actionType: TOOL_ACTION_TYPES.NONE,
+      },
     });
   };
-  const boardundoHandler = () => {
-    dispatch({
-      type:BOARD_ACTIONS.UNDO,
 
-    })
+  const textAreaBlurHandler = (text) => {
+    dispatchBoardAction({
+      type: BOARD_ACTIONS.CHANGE_TEXT,
+      payload: {
+        text,
+      },
+    });
+  };
 
-  }
-  const boardredoHandler = () => {
-    dispatch({
+  const boardUndoHandler = useCallback(() => {
+    dispatchBoardAction({
+      type: BOARD_ACTIONS.UNDO,
+    });
+  }, []);
+
+  const boardRedoHandler = useCallback(() => {
+    dispatchBoardAction({
       type: BOARD_ACTIONS.REDO,
     });
-  };
-  const boardContextValue = {
-    activeTool: boardState.activeToolItem,
-    toolActionType: boardState.toolActionType,
-    element: boardState.element,
+  }, []);
 
-    changeToolHandler: handleTooLItemClick,
+  const setCanvasId = (canvasId) => {
+    dispatchBoardAction({
+      type: BOARD_ACTIONS.SET_CANVAS_ID,
+      payload: {
+        canvasId,
+      },
+    });
+  };
+
+  const setElements = (elements) => {
+    dispatchBoardAction({
+      type: BOARD_ACTIONS.SET_CANVAS_ELEMENTS,
+      payload: {
+        elements,
+      },
+    });
+  };
+    // console.log("hello canvas")
+  const setHistory = (elements) => {
+    dispatchBoardAction({
+      type: BOARD_ACTIONS.SET_HISTORY,
+      payload: {
+        elements,
+      },
+    });
+  };  
+
+  const setUserLoginStatus = (isUserLoggedIn) => {
+    dispatchBoardAction({
+      type: BOARD_ACTIONS.SET_USER_LOGIN_STATUS,
+      payload: {
+        isUserLoggedIn,
+      },
+    })
+  }
+
+  const boardContextValue = {
+    activeToolItem: boardState.activeToolItem,
+    elements: boardState.elements,
+    toolActionType: boardState.toolActionType,
+    canvasId: boardState.canvasId,
+    isUserLoggedIn: boardState.isUserLoggedIn,
+    changeToolHandler,
     boardMouseDownHandler,
     boardMouseMoveHandler,
-    boardMouseUPHandler,
+    boardMouseUpHandler,
     textAreaBlurHandler,
-    history: boardState.history,
-    index: boardState.index,
-    undo:boardundoHandler,
-    redo:boardredoHandler,
-
+    undo: boardUndoHandler,
+    redo: boardRedoHandler,
+    setCanvasId, 
+    setElements,
+    setHistory,
+    setUserLoginStatus
   };
 
   return (
-    <BoardContext.Provider value={boardContextValue}>
+    <boardContext.Provider value={boardContextValue}>
       {children}
-    </BoardContext.Provider>
+    </boardContext.Provider>
   );
-}
+};
 
-export default Boardprovider;
+export default BoardProvider;
